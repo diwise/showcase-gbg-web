@@ -1,0 +1,49 @@
+.item {
+    height: 270px;
+    width: 270px;
+}
+
+.item>img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 124px;
+    height: 124px;
+}
+
+.card {
+    padding: 5px;
+    margin: 8px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+    transition: 0.3s;
+}
+
+/* On mouse-over, add a deeper shadow */
+.card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+/* Add some padding inside the card container */
+.card-container {
+    padding: 2px 16px;
+}
+
+.observedAt {
+    text-align: right;
+    font-style: italic;
+    font-size: x-small;
+}
+
+.item h4 {
+    margin-block: 0px;
+    margin-bottom: 5px;
+}
+
+.item h5 {
+    margin-block: 0px;
+    margin-bottom: 22px;
+    font-weight: lighter;
+    font-size: x-small;
+    overflow: hidden;
+    white-space: nowrap;
+}
