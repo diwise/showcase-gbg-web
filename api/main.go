@@ -27,6 +27,9 @@ func main() {
 	webRoot := os.Getenv("WEB_ROOT")
 	log.Println("web root:", webRoot)
 
+	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	})
 	r.Handle("/*", http.FileServer(http.Dir(webRoot)))
 	r.Mount("/events/", s)
 	r.Post("/v2/notify", notifyHandlerFunc(s))
