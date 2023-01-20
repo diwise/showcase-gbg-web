@@ -17,6 +17,18 @@ import (
 
 var messages []json.RawMessage = make([]json.RawMessage, 0)
 
+type Entity struct {
+	Id   string `json:"id"`
+	Type string `json:"type"`
+}
+
+type Notification struct {
+	Entity
+	SubscriptionId string            `json:"subscriptionId"`
+	NotifiedAt     string            `json:"notifiedAt"`
+	Entities       []json.RawMessage `json:"data"`
+}
+
 func main() {
 	r := chi.NewRouter()
 
@@ -34,6 +46,7 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+
 	r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
 		m, err := json.Marshal(messages)
 		if err != nil {
@@ -42,6 +55,7 @@ func main() {
 		w.Write(m)
 		w.WriteHeader(http.StatusOK)
 	})
+
 	r.Handle("/*", http.FileServer(http.Dir(webRoot)))
 	r.Mount("/events/", s)
 	r.Post("/v2/notify", notifyHandlerFunc(s))
@@ -54,7 +68,6 @@ func main() {
 	}()
 
 	http.ListenAndServe(":8080", r)
-
 }
 
 func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
@@ -85,18 +98,6 @@ func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
 			w.WriteHeader(http.StatusOK)
 		}
 	})
-}
-
-type Entity struct {
-	Id   string `json:"id"`
-	Type string `json:"type"`
-}
-
-type Notification struct {
-	Entity
-	SubscriptionId string            `json:"subscriptionId"`
-	NotifiedAt     string            `json:"notifiedAt"`
-	Entities       []json.RawMessage `json:"data"`
 }
 
 func notificationReceived(ctx context.Context, s *sse.Server, n Notification) error {
