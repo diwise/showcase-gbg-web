@@ -3,15 +3,19 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/alexandrevicenzi/go-sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
+
+var messages []json.RawMessage = make([]json.RawMessage, 0)
 
 func main() {
 	r := chi.NewRouter()
@@ -30,11 +34,27 @@ func main() {
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	})
+	r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
+		m, err := json.Marshal(messages)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+		w.Write(m)
+		w.WriteHeader(http.StatusOK)
+	})
 	r.Handle("/*", http.FileServer(http.Dir(webRoot)))
 	r.Mount("/events/", s)
 	r.Post("/v2/notify", notifyHandlerFunc(s))
 
+	go func() {
+		for {
+			s.SendMessage("/events/channel-1", sse.NewMessage(fmt.Sprint(time.Now().Unix()), "{}", "keep-alive"))
+			time.Sleep(10 * time.Second)
+		}
+	}()
+
 	http.ListenAndServe(":8080", r)
+
 }
 
 func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
@@ -81,12 +101,18 @@ type Notification struct {
 
 func notificationReceived(ctx context.Context, s *sse.Server, n Notification) error {
 	for _, e := range n.Entities {
+		var entity Entity
+		json.Unmarshal(e, &entity)
+
 		b, err := e.MarshalJSON()
 		if err != nil {
 			return err
 		}
 
-		s.SendMessage("/events/channel-1", sse.SimpleMessage(string(b)))
+		message := sse.NewMessage(fmt.Sprint(time.Now().Unix()), string(b), entity.Type)
+		messages = append(messages, e)
+
+		s.SendMessage("/events/channel-1", message)
 	}
 
 	return nil

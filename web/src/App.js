@@ -30,12 +30,33 @@ function App() {
     return newState;
   }
 
+  const deduplicate = (entities) => {
+    let distinct = [];
+    entities.forEach((e) => {
+      let i = distinct.findIndex(x => x.id === e.id);
+      if (i > -1) {
+        distinct[i] = e;
+      } else {
+        distinct = [...distinct, e];
+      }
+    })
+    return distinct;
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       await fetchEventSource(`/events/channel-1`, {
         onopen(res) {
           if (res.ok && res.status === 200) {
             console.log("Connection made ", res);
+
+            fetch(`/messages`, {
+              headers: {
+                'Accept': 'application/json',
+              },
+            }).then(res => res.json())
+              .then(json => setState({ timestamp: Date.now(), entities: deduplicate(json) }));
+
           } else if (
             res.status >= 400 &&
             res.status < 500 &&
@@ -45,9 +66,13 @@ function App() {
           }
         },
         onmessage(event) {
-          const obj = JSON.parse(event.data);
-          console.log(obj)
-          setState((s) => updateState(s, obj))
+          if (event.event !== "keep-alive") {
+            const obj = JSON.parse(event.data);
+            console.log(obj)
+            setState((s) => updateState(s, obj))
+          } else {
+            console.log("keep-alive")
+          }
         },
         onclose() {
           console.log("Connection closed by the server");
