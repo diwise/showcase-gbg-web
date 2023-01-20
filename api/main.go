@@ -8,14 +8,13 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/alexandrevicenzi/go-sse"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 )
-
-var messages []json.RawMessage = make([]json.RawMessage, 0)
 
 type Entity struct {
 	Id   string `json:"id"`
@@ -28,6 +27,31 @@ type Notification struct {
 	NotifiedAt     string            `json:"notifiedAt"`
 	Entities       []json.RawMessage `json:"data"`
 }
+
+type Store struct {
+	mu       sync.Mutex
+	messages []json.RawMessage
+}
+
+func (s *Store) Add(m json.RawMessage) {
+	s.mu.Lock()
+	s.messages = append(s.messages, m)
+	s.mu.Unlock()
+}
+
+func (s *Store) Get() ([]byte, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	m, err := json.Marshal(s.messages)
+	if err != nil {
+		return nil, err
+	}
+
+	return m, nil
+}
+
+var store Store = Store{messages: make([]json.RawMessage, 0)}
 
 func main() {
 	r := chi.NewRouter()
@@ -48,7 +72,7 @@ func main() {
 	})
 
 	r.Get("/messages", func(w http.ResponseWriter, r *http.Request) {
-		m, err := json.Marshal(messages)
+		m, err := store.Get()
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 		}
@@ -111,7 +135,7 @@ func notificationReceived(ctx context.Context, s *sse.Server, n Notification) er
 		}
 
 		message := sse.NewMessage(fmt.Sprint(time.Now().Unix()), string(b), entity.Type)
-		messages = append(messages, e)
+		store.Add(e)
 
 		s.SendMessage("/events/channel-1", message)
 	}
