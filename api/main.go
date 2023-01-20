@@ -127,7 +127,10 @@ func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
 func notificationReceived(ctx context.Context, s *sse.Server, n Notification) error {
 	for _, e := range n.Entities {
 		var entity Entity
-		json.Unmarshal(e, &entity)
+		err := json.Unmarshal(e, &entity)
+		if err != nil {
+			return err
+		}
 
 		b, err := e.MarshalJSON()
 		if err != nil {
@@ -135,9 +138,9 @@ func notificationReceived(ctx context.Context, s *sse.Server, n Notification) er
 		}
 
 		message := sse.NewMessage(fmt.Sprint(time.Now().Unix()), string(b), entity.Type)
-		store.Add(e)
-
 		s.SendMessage("/events/channel-1", message)
+		
+		store.Add(e)
 	}
 
 	return nil
