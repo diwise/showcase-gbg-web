@@ -30,7 +30,7 @@ function App() {
     return newState;
   }
 
-  const deduplicate = (entities) => {
+  const filterDistinct = (entities) => {
     let distinct = [];
     entities.forEach((e) => {
       let i = distinct.findIndex(x => x.id === e.id);
@@ -55,7 +55,7 @@ function App() {
                 'Accept': 'application/json',
               },
             }).then(res => res.json())
-              .then(json => setState({ timestamp: Date.now(), entities: deduplicate(json) }));
+              .then(json => setState({ timestamp: Date.now(), entities: filterDistinct(json) }));
 
           } else if (
             res.status >= 400 &&
