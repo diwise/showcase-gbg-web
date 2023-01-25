@@ -87,7 +87,12 @@ func main() {
 	go func() {
 		for {
 			s.SendMessage("/events/channel-1", sse.NewMessage(fmt.Sprint(time.Now().Unix()), "{}", "keep-alive"))
-			time.Sleep(10 * time.Second)
+
+			if _, ok := s.GetChannel("/events/channel-1"); ok {
+				time.Sleep(10 * time.Second)
+			} else {
+				time.Sleep(20 * time.Second)
+			}						
 		}
 	}()
 
@@ -113,7 +118,7 @@ func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
 			return
 		}
 
-		err = notificationReceived(r.Context(), s, n)
+		err = sendNotification(r.Context(), s, n)
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			w.Write([]byte(err.Error()))
@@ -124,7 +129,7 @@ func notifyHandlerFunc(s *sse.Server) http.HandlerFunc {
 	})
 }
 
-func notificationReceived(ctx context.Context, s *sse.Server, n Notification) error {
+func sendNotification(ctx context.Context, s *sse.Server, n Notification) error {
 	for _, e := range n.Entities {
 		var entity Entity
 		err := json.Unmarshal(e, &entity)
