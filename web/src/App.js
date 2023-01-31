@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import { fetchEventSource } from "@microsoft/fetch-event-source";
 import Dashboard from "./pages/Dashboard";
 import './App.css';
-import SideBar from "./components/SideBar";
 import Header from "./components/Header"
 
 function App() {
@@ -25,7 +24,7 @@ function App() {
       newState.entities = [...s.entities, obj]
     }
 
-    console.log(newState)
+    console.log(obj);
 
     return newState;
   }
