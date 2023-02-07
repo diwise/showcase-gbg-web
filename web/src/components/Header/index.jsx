@@ -11,10 +11,14 @@ const Header = () => {
                 <nav class="main-nav">
                     <ul class="main-nav-list">
                         <li>
-                            <a href="#">Sensordata på karta</a>
+                            <a href="https://hajk2-002t-it-auto-showcase.apps.ocptest.gbgpaas.se/" target="_blank" rel="noopener noreferrer">
+                                Sensordata på karta
+                            </a>
                         </li>
                         <li>
-                            <a href="#">Historisk sensordata</a>
+                            <a href="https://grafana-002t-it-auto-showcase.apps.ocptest.gbgpaas.se/d/iWl2q80Vz/showcase?orgId=1&refresh=1m" target="_blank" rel="noopener noreferrer">
+                                Historisk sensordata
+                            </a>
                         </li>
                     </ul>
                 </nav>
